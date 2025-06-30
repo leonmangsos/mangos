@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算术小游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .settings {
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .question {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 40px;
+        }
+        input {
+            padding: 10px;
+            font-size: 18px;
+            width: 100px;
+            text-align: center;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            min-height: 27px;
+        }
+        .correct {
+            color: #27ae60;
+        }
+        .incorrect {
+            color: #e74c3c;
+        }
+        .score {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>算术小游戏</h1>
+        
+        <div class="settings">
+            <select id="operation">
+                <option value="add">加法 (+)</option>
+                <option value="subtract">减法 (-)</option>
+                <option value="multiply">乘法 (×)</option>
+                <option value="divide">除法 (÷)</option>
+            </select>
+            
+            <select id="difficulty">
+                <option value="easy">简单</option>
+                <option value="medium">中等</option>
+                <option value="hard">困难</option>
+            </select>
+            
+            <button id="startBtn">开始游戏</button>
+        </div>
+        
+        <div class="question" id="question"></div>
+        
+        <div>
+            <input type="number" id="answer" placeholder="输入答案">
+            <button id="submitBtn">提交</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="score">
+            得分: <span id="score">0</span> | 
+            正确: <span id="correct">0</span> | 
+            错误: <span id="wrong">0</span>
+        </div>
+    </div>
+
+    <script>
+        // 游戏变量
+        let num1, num2, correctAnswer;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let operation = 'add';
+        let difficulty = 'easy';
+        
+        // DOM元素
+        const questionEl = document.getElementById('question');
+        const answerEl = document.getElementById('answer');
+        const resultEl = document.getElementById('result');
+        const scoreEl = document.getElementById('score');
+        const correctEl = document.getElementById('correct');
+        const wrongEl = document.getElementById('wrong');
+        const operationEl = document.getElementById('operation');
+        const difficultyEl = document.getElementById('difficulty');
+        const startBtn = document.getElementById('startBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // 开始游戏
+        startBtn.addEventListener('click', startGame);
+        submitBtn.addEventListener('click', checkAnswer);
+        
+        // 监听回车键提交答案
+        answerEl.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        
+        function startGame() {
+            // 重置游戏状态
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            updateScore();
+            
+            // 获取当前选择的运算和难度
+            operation = operationEl.value;
+            difficulty = difficultyEl.value;
+            
+            // 生成第一个问题
+            generateQuestion();
+            
+            // 聚焦到答案输入框
+            answerEl.focus();
+        }
+        
+        function generateQuestion() {
+            // 根据难度设置数字范围
+            let maxNum;
+            switch(difficulty) {
+                case 'easy':
+                    maxNum = 10;
+                    break;
+                case 'medium':
+                    maxNum = 20;
+                    break;
+                case 'hard':
+                    maxNum = 50;
+                    break;
+                default:
+                    maxNum = 10;
+            }
+            
+            // 生成随机数
+            num1 = Math.floor(Math.random() * maxNum) + 1;
+            num2 = Math.floor(Math.random() * maxNum) + 1;
+            
+            // 根据运算类型调整数字和计算正确答案
+            let operator;
+            switch(operation) {
+                case 'add':
+                    operator = '+';
+                    correctAnswer = num1 + num2;
+                    break;
+                case 'subtract':
+                    operator = '-';
+                    // 确保减法结果为正数
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1]; // 交换两个数
+                    }
+                    correctAnswer = num1 - num2;
+                    break;
+                case 'multiply':
+                    operator = '×';
+                    correctAnswer = num1 * num2;
+                    break;
+                case 'divide':
+                    operator = '÷';
+                    // 确保除法结果是整数
+                    correctAnswer = num1;
+                    num1 = num1 * num2; // 重新计算num1使结果为整数
+                    break;
+            }
+            
+            // 显示问题
+            questionEl.textContent = `${num1} ${operator} ${num2} = ?`;
+            
+            // 清空结果和答案输入框
+            resultEl.textContent = '';
+            resultEl.className = 'result';
+            answerEl.value = '';
+        }
+        
+        function checkAnswer() {
+            const userAnswer = parseInt(answerEl.value);
+            
+            if (isNaN(userAnswer)) {
+                resultEl.textContent = '请输入有效的数字！';
+                resultEl.className = 'result incorrect';
+                return;
+            }
+            
+            if (userAnswer === correctAnswer) {
+                resultEl.textContent = '正确！';
+                resultEl.className = 'result correct';
+                score += 10;
+                correctCount++;
+            } else {
+                resultEl.textContent = `错误！正确答案是 ${correctAnswer}`;
+                resultEl.className = 'result incorrect';
+                wrongCount++;
+            }
+            
+            updateScore();
+            
+            // 延迟生成下一个问题
+            setTimeout(generateQuestion, 1500);
+        }
+        
+        function updateScore() {
+            scoreEl.textContent = score;
+            correctEl.textContent = correctCount;
+            wrongEl.textContent = wrongCount;
+        }
+        
+        // 初始化游戏
+        startGame();
+    </script>
+</body>
+</html>

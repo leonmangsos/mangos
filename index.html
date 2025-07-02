@@ -3,254 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>算术小游戏</title>
+    <title>AI土豆生成器</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
             text-align: center;
+        }
+        
+        .container {
+            z-index: 10;
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
         }
+        
         h1 {
-            color: #2c3e50;
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .game-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        .description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
         }
-        .settings {
-            margin-bottom: 20px;
+        
+        #input-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
         }
-        select, button {
-            padding: 8px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            font-size: 16px;
+        
+        #potato-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            outline: none;
         }
-        button {
-            background-color: #3498db;
+        
+        #potato-input:focus {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: scale(1.02);
+        }
+        
+        #generate-btn {
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
             color: white;
             border: none;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .question {
-            font-size: 24px;
-            margin: 20px 0;
-            min-height: 40px;
-        }
-        input {
-            padding: 10px;
-            font-size: 18px;
-            width: 100px;
-            text-align: center;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        .result {
-            margin-top: 20px;
-            font-size: 18px;
-            min-height: 27px;
-        }
-        .correct {
-            color: #27ae60;
-        }
-        .incorrect {
-            color: #e74c3c;
-        }
-        .score {
-            font-size: 18px;
-            margin-top: 20px;
+            transition: all 0.3s ease;
             font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        #generate-btn:active {
+            transform: translateY(1px);
+        }
+        
+        #potato-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .loading {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .dot {
+            display: inline-block;
+            animation: bounce 1.5s infinite;
+        }
+        
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .counter {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>算术小游戏</h1>
+    <div class="container">
+        <h1>AI 土豆生成器</h1>
+        <p class="description">描述你梦想中的土豆，我们将用AI魔法将其变为现实！<br>这些神奇土豆将逐渐布满你的屏幕...</p>
         
-        <div class="settings">
-            <select id="operation">
-                <option value="add">加法 (+)</option>
-                <option value="subtract">减法 (-)</option>
-                <option value="multiply">乘法 (×)</option>
-                <option value="divide">除法 (÷)</option>
-            </select>
-            
-            <select id="difficulty">
-                <option value="easy">简单</option>
-                <option value="medium">中等</option>
-                <option value="hard">困难</option>
-            </select>
-            
-            <button id="startBtn">开始游戏</button>
+        <div id="input-container">
+            <input type="text" id="potato-input" 
+                   placeholder="例如：蓝色斑点的小土豆，戴着红色帽子...">
         </div>
         
-        <div class="question" id="question"></div>
+        <button id="generate-btn">召唤土豆</button>
         
-        <div>
-            <input type="number" id="answer" placeholder="输入答案">
-            <button id="submitBtn">提交</button>
-        </div>
-        
-        <div class="result" id="result"></div>
-        
-        <div class="score">
-            得分: <span id="score">0</span> | 
-            正确: <span id="correct">0</span> | 
-            错误: <span id="wrong">0</span>
+        <div class="loading" id="loading">
+            正在施展AI魔法<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
         </div>
     </div>
-
+    
+    <canvas id="potato-canvas"></canvas>
+    <div class="counter" id="counter">土豆数量: 0</div>
+    
     <script>
-        // 游戏变量
-        let num1, num2, correctAnswer;
-        let score = 0;
-        let correctCount = 0;
-        let wrongCount = 0;
-        let operation = 'add';
-        let difficulty = 'easy';
-        
-        // DOM元素
-        const questionEl = document.getElementById('question');
-        const answerEl = document.getElementById('answer');
-        const resultEl = document.getElementById('result');
-        const scoreEl = document.getElementById('score');
-        const correctEl = document.getElementById('correct');
-        const wrongEl = document.getElementById('wrong');
-        const operationEl = document.getElementById('operation');
-        const difficultyEl = document.getElementById('difficulty');
-        const startBtn = document.getElementById('startBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        // 开始游戏
-        startBtn.addEventListener('click', startGame);
-        submitBtn.addEventListener('click', checkAnswer);
-        
-        // 监听回车键提交答案
-        answerEl.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkAnswer();
-            }
-        });
-        
-        function startGame() {
-            // 重置游戏状态
-            score = 0;
-            correctCount = 0;
-            wrongCount = 0;
-            updateScore();
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('potato-canvas');
+            const ctx = canvas.getContext('2d');
+            const input = document.getElementById('potato-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const container = document.querySelector('.container');
+            const loading = document.getElementById('loading');
+            const counter = document.getElementById('counter');
             
-            // 获取当前选择的运算和难度
-            operation = operationEl.value;
-            difficulty = difficultyEl.value;
-            
-            // 生成第一个问题
-            generateQuestion();
-            
-            // 聚焦到答案输入框
-            answerEl.focus();
-        }
-        
-        function generateQuestion() {
-            // 根据难度设置数字范围
-            let maxNum;
-            switch(difficulty) {
-                case 'easy':
-                    maxNum = 10;
-                    break;
-                case 'medium':
-                    maxNum = 20;
-                    break;
-                case 'hard':
-                    maxNum = 50;
-                    break;
-                default:
-                    maxNum = 10;
+            // 设置canvas大小为窗口大小
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
             }
             
-            // 生成随机数
-            num1 = Math.floor(Math.random() * maxNum) + 1;
-            num2 = Math.floor(Math.random() * maxNum) + 1;
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
             
-            // 根据运算类型调整数字和计算正确答案
-            let operator;
-            switch(operation) {
-                case 'add':
-                    operator = '+';
-                    correctAnswer = num1 + num2;
-                    break;
-                case 'subtract':
-                    operator = '-';
-                    // 确保减法结果为正数
-                    if (num1 < num2) {
-                        [num1, num2] = [num2, num1]; // 交换两个数
+            // 土豆对象
+            class Potato {
+                constructor(x, y, radius, color, pattern, accessories) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.color = color;
+                    this.pattern = pattern;
+                    this.accessories = accessories;
+                    this.vx = (Math.random() - 0.5) * 4;
+                    this.vy = (Math.random() - 0.5) * 4;
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+                    this.pulse = Math.random() * 2;
+                }
+                
+                update() {
+                    // 更新位置
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // 边界碰撞检测
+                    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                        this.vx = -this.vx;
                     }
-                    correctAnswer = num1 - num2;
-                    break;
-                case 'multiply':
-                    operator = '×';
-                    correctAnswer = num1 * num2;
-                    break;
-                case 'divide':
-                    operator = '÷';
-                    // 确保除法结果是整数
-                    correctAnswer = num1;
-                    num1 = num1 * num2; // 重新计算num1使结果为整数
-                    break;
+                    if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+                        this.vy = -this.vy;
+                    }
+                    
+                    // 更新旋转
+                    this.rotation += this.rotationSpeed;
+                    
+                    // 更新脉动效果
+                    this.pulse += 0.02;
+                }
+                
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    
+                    // 绘制土豆主体
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.radius, this.radius * 0.8, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    // 绘制斑点图案
+                    if (this.pattern === 'spots') {
+                        ctx.fillStyle = '#8B4513';
+                        for (let i = 0; i < 5; i++) {
+                            const angle = (i / 5) * Math.PI * 2;
+                            const spotRadius = this.radius * 0.2;
+                            const spotX = Math.cos(angle) * (this.radius * 0.6);
+                            const spotY = Math.sin(angle) * (this.radius * 0.6);
+                            ctx.beginPath();
+                            ctx.arc(spotX, spotY, spotRadius, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else if (this.pattern === 'stripes') {
+                        ctx.strokeStyle = '#8B4513';
+                        ctx.lineWidth = this.radius * 0.1;
+                        for (let i = -2; i <= 2; i++) {
+                            ctx.beginPath();
+                            ctx.moveTo(-this.radius, i * this.radius * 0.4);
+                            ctx.lineTo(this.radius, i * this.radius * 0.4);
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // 绘制配件
+                    if (this.accessories.includes('hat')) {
+                        ctx.fillStyle = '#FF0000';
+                        ctx.beginPath();
+                        ctx.moveTo(-this.radius * 0.8, -this.radius * 0.8);
+                        ctx.lineTo(this.radius * 0.8, -this.radius * 0.8);
+                        ctx.lineTo(this.radius * 0.5, -this.radius * 1.5);
+                        ctx.lineTo(-this.radius * 0.5, -this.radius * 1.5);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#FFFF00';
+                        ctx.beginPath();
+                        ctx.arc(0, -this.radius * 1.5, this.radius * 0.2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    if (this.accessories.includes('glasses')) {
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.3, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.3, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(-this.radius * 0.6, -this.radius * 0.2);
+                        ctx.lineTo(this.radius * 0.6, -this.radius * 0.2);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
             }
             
-            // 显示问题
-            questionEl.textContent = `${num1} ${operator} ${num2} = ?`;
+            // 土豆数组
+            let potatoes = [];
+            let potatoCount = 0;
+            let maxPotatoes = 100;
+            let generationInterval;
             
-            // 清空结果和答案输入框
-            resultEl.textContent = '';
-            resultEl.className = 'result';
-            answerEl.value = '';
-        }
-        
-        function checkAnswer() {
-            const userAnswer = parseInt(answerEl.value);
-            
-            if (isNaN(userAnswer)) {
-                resultEl.textContent = '请输入有效的数字！';
-                resultEl.className = 'result incorrect';
-                return;
+            // 动画循环
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 更新和绘制所有土豆
+                potatoes.forEach(potato => {
+                    potato.update();
+                    potato.draw();
+                });
+                
+                requestAnimationFrame(animate);
             }
             
-            if (userAnswer === correctAnswer) {
-                resultEl.textContent = '正确！';
-                resultEl.className = 'result correct';
-                score += 10;
-                correctCount++;
-            } else {
-                resultEl.textContent = `错误！正确答案是 ${correctAnswer}`;
-                resultEl.className = 'result incorrect';
-                wrongCount++;
+            // 根据描述生成土豆样式
+            function createPotatoStyle(description) {
+                const descriptionLower = description.toLowerCase();
+                
+                // 确定大小
+                let radius;
+                if (descriptionLower.includes('小') || descriptionLower.includes('迷你') || descriptionLower.includes('tiny')) {
+                    radius = 15 + Math.random() * 10;
+                } else if (descriptionLower.includes('大') || descriptionLower.includes('巨大') || descriptionLower.includes('big')) {
+                    radius = 35 + Math.random() * 20;
+                } else {
+                    radius = 20 + Math.random() * 15;
+                }
+                
+                // 确定颜色
+                let color;
+                if (descriptionLower.includes('蓝') || descriptionLower.includes('blue')) {
+                    color = `hsl(${200 + Math.random() * 30}, 70%, 60%)`;
+                } else if (descriptionLower.includes('红') || descriptionLower.includes('red')) {
+                    color = `hsl(${0 + Math.random() * 20}, 80%, 60%)`;
+                } else if (descriptionLower.includes('绿') || descriptionLower.includes('green')) {
+                    color = `hsl(${100 + Math.random() * 30}, 70%, 50%)`;
+                } else if (descriptionLower.includes('黄') || descriptionLower.includes('yellow')) {
+                    color = `hsl(${50 + Math.random() * 20}, 80%, 60%)`;
+                } else if (descriptionLower.includes('紫') || descriptionLower.includes('purple')) {
+                    color = `hsl(${270 + Math.random() * 30}, 70%, 60%)`;
+                } else {
+                    // 默认土豆颜色
+                    color = `hsl(${30 + Math.random() * 20}, 70%, 50%)`;
+                }
+                
+                // 确定图案
+                let pattern = 'none';
+                if (descriptionLower.includes('斑点') || descriptionLower.includes('spots') || descriptionLower.includes('点')) {
+                    pattern = 'spots';
+                } else if (descriptionLower.includes('条纹') || descriptionLower.includes('stripes') || descriptionLower.includes('线')) {
+                    pattern = 'stripes';
+                }
+                
+                // 确定配件
+                const accessories = [];
+                if (descriptionLower.includes('帽子') || descriptionLower.includes('hat')) {
+                    accessories.push('hat');
+                }
+                if (descriptionLower.includes('眼镜') || descriptionLower.includes('glasses')) {
+                    accessories.push('glasses');
+                }
+                
+                return { radius, color, pattern, accessories };
             }
             
-            updateScore();
+            // 生成新土豆
+            function generatePotato(style) {
+                if (potatoCount >= maxPotatoes) return;
+                
+                // 随机位置生成土豆（确保在画布内）
+                const x = Math.random() * (canvas.width - style.radius * 2) + style.radius;
+                const y = Math.random() * (canvas.height - style.radius * 2) + style.radius;
+                
+                const newPotato = new Potato(x, y, style.radius, style.color, style.pattern, style.accessories);
+                potatoes.push(newPotato);
+                potatoCount++;
+                counter.textContent = `土豆数量: ${potatoCount}`;
+            }
             
-            // 延迟生成下一个问题
-            setTimeout(generateQuestion, 1500);
-        }
-        
-        function updateScore() {
-            scoreEl.textContent = score;
-            correctEl.textContent = correctCount;
-            wrongEl.textContent = wrongCount;
-        }
-        
-        // 初始化游戏
-        startGame();
+            // 按钮点击事件
+            generateBtn.addEventListener('click', function() {
+                const description = input.value.trim();
+                
+                if (description) {
+                    // 显示加载动画
+                    loading.style.display = 'block';
+                    generateBtn.disabled = true;
+                    
+                    // 模拟AI处理延迟
+                    setTimeout(() => {
+                        const style = createPotatoStyle(description);
+                        
+                        // 隐藏输入界面
+                        container.classList.add('hidden');
+                        loading.style.display = 'none';
+                        
+                        // 开始生成土豆
+                        generatePotato(style);
+                        
+                        // 设置定时器不断生成新土豆
+                        generationInterval = setInterval(() => {
+                            generatePotato(style);
+                            
+                            // 达到最大数量后停止生成
+                            if (potatoCount >= maxPotatoes) {
+                                clearInterval(generationInterval);
+                            }
+                        }, 1000);
+                    }, 2000);
+                } else {
+                    alert('请输入土豆的描述！');
+                }
+            });
+            
+            // 启动动画循环
+            animate();
+        });
     </script>
 </body>
 </html>

@@ -3,14 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI土豆生成器</title>
+    <title>AI土豆生成器 - 自然形态版</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
@@ -23,7 +18,6 @@
             color: white;
             text-align: center;
         }
-        
         .container {
             z-index: 10;
             max-width: 600px;
@@ -32,8 +26,8 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
+            transition: opacity 0.5s, transform 0.5s;
         }
-        
         h1 {
             font-size: 2.8rem;
             margin-bottom: 1rem;
@@ -42,18 +36,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
-        .description {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-        
-        #input-container {
-            width: 100%;
-            margin-bottom: 1.5rem;
-        }
-        
         #potato-input {
             width: 100%;
             padding: 15px;
@@ -61,106 +43,38 @@
             border: none;
             border-radius: 50px;
             background: rgba(255, 255, 255, 0.9);
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            outline: none;
+            margin-bottom: 20px;
         }
-        
-        #potato-input:focus {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-            transform: scale(1.02);
-        }
-        
         #generate-btn {
             padding: 15px 50px;
-            font-size: 1.2rem;
             background: linear-gradient(to right, #ff7e5f, #feb47b);
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 1.2rem;
             font-weight: bold;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
-        #generate-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        #generate-btn:active {
-            transform: translateY(1px);
-        }
-        
-        #potato-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-        }
-        
-        .loading {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            display: none;
-        }
-        
-        .dot {
-            display: inline-block;
-            animation: bounce 1.5s infinite;
-        }
-        
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
         .counter {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             right: 20px;
-            font-size: 1.2rem;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0,0.7);
             padding: 10px 20px;
             border-radius: 20px;
             z-index: 100;
         }
+        .hidden { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>AI 土豆生成器</h1>
-        <p class="description">描述你梦想中的土豆，我们将用AI魔法将其变为现实！<br>这些神奇土豆将逐渐布满你的屏幕...</p>
+        <p>描述你梦想中的土豆，我们将用AI魔法将其变为现实！</p>
         
-        <div id="input-container">
-            <input type="text" id="potato-input" 
-                   placeholder="例如：蓝色斑点的小土豆，戴着红色帽子...">
-        </div>
-        
+        <input type="text" id="potato-input" 
+               placeholder="例如：带斑点的绿皮土豆，戴着帽子...">
         <button id="generate-btn">召唤土豆</button>
-        
-        <div class="loading" id="loading">
-            正在施展AI魔法<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
-        </div>
     </div>
     
     <canvas id="potato-canvas"></canvas>
@@ -173,7 +87,6 @@
             const input = document.getElementById('potato-input');
             const generateBtn = document.getElementById('generate-btn');
             const container = document.querySelector('.container');
-            const loading = document.getElementById('loading');
             const counter = document.getElementById('counter');
             
             // 设置canvas大小为窗口大小
@@ -185,20 +98,37 @@
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
             
-            // 土豆对象
+            // 土豆对象（采用自然形态算法）
             class Potato {
-                constructor(x, y, radius, color, pattern, accessories) {
+                constructor(x, y) {
                     this.x = x;
                     this.y = y;
-                    this.radius = radius;
-                    this.color = color;
-                    this.pattern = pattern;
-                    this.accessories = accessories;
-                    this.vx = (Math.random() - 0.5) * 4;
-                    this.vy = (Math.random() - 0.5) * 4;
+                    // 形状参数
+                    this.deformLevel = 0.3 + Math.random() * 0.5; // 畸形度系数
+                    this.radiusX = 20 + Math.random() * 15;        // 长轴半径
+                    this.radiusY = this.radiusX * (0.7 + Math.random() * 0.3); // 短轴随机
+                    
+                    // 颜色参数（基于真实马铃薯色谱）[3,4](@ref)
+                    const baseHue = 30 + Math.random() * 20; // 黄-橙主色调
+                    const greenChance = 0.2; // 20%概率出现绿皮
+                    this.color = Math.random() < greenChance ? 
+                        `hsl(${70 + Math.random() * 20}, 40%, 50%)` : // 青绿色
+                        `hsl(${baseHue}, ${40 + Math.random() * 20}%, ${50 + Math.random() * 10}%)`;
+                    
+                    // 斑点参数
+                    this.hasSpots = Math.random() > 0.3; // 70%概率有斑点
+                    this.spotCount = 3 + Math.floor(Math.random() * 8);
+                    this.spotColors = ['#5D4037', '#3E2723', '#4E342E', '#3E2723'];
+                    
+                    // 配件参数
+                    this.hasHat = Math.random() > 0.7;
+                    this.hasGlasses = Math.random() > 0.8;
+                    
+                    // 物理参数
+                    this.vx = (Math.random() - 0.5) * 2;
+                    this.vy = (Math.random() - 0.5) * 2;
                     this.rotation = Math.random() * Math.PI * 2;
-                    this.rotationSpeed = (Math.random() - 0.5) * 0.05;
-                    this.pulse = Math.random() * 2;
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.02;
                 }
                 
                 update() {
@@ -206,19 +136,18 @@
                     this.x += this.vx;
                     this.y += this.vy;
                     
-                    // 边界碰撞检测
-                    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-                        this.vx = -this.vx;
+                    // 边界碰撞检测（带能量衰减）[6,7](@ref)
+                    if (this.x > canvas.width - this.radiusX || this.x < this.radiusX) {
+                        this.vx = -this.vx * 0.9;
+                        this.x = Math.max(this.radiusX, Math.min(canvas.width - this.radiusX, this.x));
                     }
-                    if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
-                        this.vy = -this.vy;
+                    if (this.y > canvas.height - this.radiusY || this.y < this.radiusY) {
+                        this.vy = -this.vy * 0.9;
+                        this.y = Math.max(this.radiusY, Math.min(canvas.height - this.radiusY, this.y));
                     }
                     
                     // 更新旋转
                     this.rotation += this.rotationSpeed;
-                    
-                    // 更新脉动效果
-                    this.pulse += 0.02;
                 }
                 
                 draw() {
@@ -226,66 +155,75 @@
                     ctx.translate(this.x, this.y);
                     ctx.rotate(this.rotation);
                     
-                    // 绘制土豆主体
+                    // 绘制土豆主体（不规则形状）[3](@ref)
                     ctx.beginPath();
-                    ctx.ellipse(0, 0, this.radius, this.radius * 0.8, 0, 0, Math.PI * 2);
+                    const pointCount = 12 + Math.floor(Math.random() * 6);
+                    for (let i = 0; i < pointCount; i++) {
+                        const angle = (i / pointCount) * Math.PI * 2;
+                        // 添加随机凹凸变形
+                        const noise = 0.9 + (Math.random() - 0.5) * this.deformLevel;
+                        const radX = this.radiusX * noise;
+                        const radY = this.radiusY * noise;
+                        const x = Math.cos(angle) * radX;
+                        const y = Math.sin(angle) * radY;
+                        
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
                     ctx.fillStyle = this.color;
                     ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
                     
-                    // 绘制斑点图案
-                    if (this.pattern === 'spots') {
-                        ctx.fillStyle = '#8B4513';
-                        for (let i = 0; i < 5; i++) {
-                            const angle = (i / 5) * Math.PI * 2;
-                            const spotRadius = this.radius * 0.2;
-                            const spotX = Math.cos(angle) * (this.radius * 0.6);
-                            const spotY = Math.sin(angle) * (this.radius * 0.6);
+                    // 绘制斑点
+                    if (this.hasSpots) {
+                        for (let i = 0; i < this.spotCount; i++) {
+                            const spotSize = 1 + Math.random() * 4;
+                            const spotAngle = Math.random() * Math.PI * 2;
+                            const spotDist = Math.random() * this.radiusX * 0.7;
+                            const spotX = Math.cos(spotAngle) * spotDist;
+                            const spotY = Math.sin(spotAngle) * spotDist;
+                            
                             ctx.beginPath();
-                            ctx.arc(spotX, spotY, spotRadius, 0, Math.PI * 2);
+                            ctx.arc(spotX, spotY, spotSize, 0, Math.PI * 2);
+                            ctx.fillStyle = this.spotColors[Math.floor(Math.random() * this.spotColors.length)];
                             ctx.fill();
-                        }
-                    } else if (this.pattern === 'stripes') {
-                        ctx.strokeStyle = '#8B4513';
-                        ctx.lineWidth = this.radius * 0.1;
-                        for (let i = -2; i <= 2; i++) {
-                            ctx.beginPath();
-                            ctx.moveTo(-this.radius, i * this.radius * 0.4);
-                            ctx.lineTo(this.radius, i * this.radius * 0.4);
-                            ctx.stroke();
                         }
                     }
                     
                     // 绘制配件
-                    if (this.accessories.includes('hat')) {
+                    if (this.hasHat) {
                         ctx.fillStyle = '#FF0000';
                         ctx.beginPath();
-                        ctx.moveTo(-this.radius * 0.8, -this.radius * 0.8);
-                        ctx.lineTo(this.radius * 0.8, -this.radius * 0.8);
-                        ctx.lineTo(this.radius * 0.5, -this.radius * 1.5);
-                        ctx.lineTo(-this.radius * 0.5, -this.radius * 1.5);
+                        ctx.moveTo(-this.radiusX * 0.8, -this.radiusY * 0.8);
+                        ctx.lineTo(this.radiusX * 0.8, -this.radiusY * 0.8);
+                        ctx.lineTo(this.radiusX * 0.5, -this.radiusY * 1.5);
+                        ctx.lineTo(-this.radiusX * 0.5, -this.radiusY * 1.5);
                         ctx.closePath();
                         ctx.fill();
                         
                         ctx.fillStyle = '#FFFF00';
                         ctx.beginPath();
-                        ctx.arc(0, -this.radius * 1.5, this.radius * 0.2, 0, Math.PI * 2);
+                        ctx.arc(0, -this.radiusY * 1.5, this.radiusX * 0.2, 0, Math.PI * 2);
                         ctx.fill();
                     }
                     
-                    if (this.accessories.includes('glasses')) {
+                    if (this.hasGlasses) {
                         ctx.strokeStyle = '#000';
                         ctx.lineWidth = 2;
                         ctx.beginPath();
-                        ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.3, 0, Math.PI * 2);
+                        ctx.arc(-this.radiusX * 0.3, -this.radiusY * 0.2, this.radiusX * 0.3, 0, Math.PI * 2);
                         ctx.stroke();
                         
                         ctx.beginPath();
-                        ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.3, 0, Math.PI * 2);
+                        ctx.arc(this.radiusX * 0.3, -this.radiusY * 0.2, this.radiusX * 0.3, 0, Math.PI * 2);
                         ctx.stroke();
                         
                         ctx.beginPath();
-                        ctx.moveTo(-this.radius * 0.6, -this.radius * 0.2);
-                        ctx.lineTo(this.radius * 0.6, -this.radius * 0.2);
+                        ctx.moveTo(-this.radiusX * 0.6, -this.radiusY * 0.2);
+                        ctx.lineTo(this.radiusX * 0.6, -this.radiusY * 0.2);
                         ctx.stroke();
                     }
                     
@@ -299,9 +237,13 @@
             let maxPotatoes = 100;
             let generationInterval;
             
-            // 动画循环
+            // 动画循环（使用requestAnimationFrame优化性能）[6,7](@ref)
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制半透明背景层防止完全清除轨迹
+                ctx.fillStyle = 'rgba(26, 42, 108, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 // 更新和绘制所有土豆
                 potatoes.forEach(potato => {
@@ -314,65 +256,45 @@
             
             // 根据描述生成土豆样式
             function createPotatoStyle(description) {
-                const descriptionLower = description.toLowerCase();
+                const desc = description.toLowerCase();
+                const style = { 
+                    deform: 0.3, 
+                    greenChance: 0.2,
+                    spotChance: 0.7,
+                    hatChance: 0.3,
+                    glassesChance: 0.2
+                };
                 
-                // 确定大小
-                let radius;
-                if (descriptionLower.includes('小') || descriptionLower.includes('迷你') || descriptionLower.includes('tiny')) {
-                    radius = 15 + Math.random() * 10;
-                } else if (descriptionLower.includes('大') || descriptionLower.includes('巨大') || descriptionLower.includes('big')) {
-                    radius = 35 + Math.random() * 20;
-                } else {
-                    radius = 20 + Math.random() * 15;
-                }
+                if (desc.includes('斑点') || desc.includes('spot')) style.spotChance = 0.9;
+                if (desc.includes('绿') || desc.includes('green')) style.greenChance = 0.8;
+                if (desc.includes('畸形') || desc.includes('deform')) style.deform = 0.7;
+                if (desc.includes('帽子') || desc.includes('hat')) style.hatChance = 0.8;
+                if (desc.includes('眼镜') || desc.includes('glass')) style.glassesChance = 0.7;
                 
-                // 确定颜色
-                let color;
-                if (descriptionLower.includes('蓝') || descriptionLower.includes('blue')) {
-                    color = `hsl(${200 + Math.random() * 30}, 70%, 60%)`;
-                } else if (descriptionLower.includes('红') || descriptionLower.includes('red')) {
-                    color = `hsl(${0 + Math.random() * 20}, 80%, 60%)`;
-                } else if (descriptionLower.includes('绿') || descriptionLower.includes('green')) {
-                    color = `hsl(${100 + Math.random() * 30}, 70%, 50%)`;
-                } else if (descriptionLower.includes('黄') || descriptionLower.includes('yellow')) {
-                    color = `hsl(${50 + Math.random() * 20}, 80%, 60%)`;
-                } else if (descriptionLower.includes('紫') || descriptionLower.includes('purple')) {
-                    color = `hsl(${270 + Math.random() * 30}, 70%, 60%)`;
-                } else {
-                    // 默认土豆颜色
-                    color = `hsl(${30 + Math.random() * 20}, 70%, 50%)`;
-                }
-                
-                // 确定图案
-                let pattern = 'none';
-                if (descriptionLower.includes('斑点') || descriptionLower.includes('spots') || descriptionLower.includes('点')) {
-                    pattern = 'spots';
-                } else if (descriptionLower.includes('条纹') || descriptionLower.includes('stripes') || descriptionLower.includes('线')) {
-                    pattern = 'stripes';
-                }
-                
-                // 确定配件
-                const accessories = [];
-                if (descriptionLower.includes('帽子') || descriptionLower.includes('hat')) {
-                    accessories.push('hat');
-                }
-                if (descriptionLower.includes('眼镜') || descriptionLower.includes('glasses')) {
-                    accessories.push('glasses');
-                }
-                
-                return { radius, color, pattern, accessories };
+                return style;
             }
             
             // 生成新土豆
             function generatePotato(style) {
                 if (potatoCount >= maxPotatoes) return;
                 
-                // 随机位置生成土豆（确保在画布内）
-                const x = Math.random() * (canvas.width - style.radius * 2) + style.radius;
-                const y = Math.random() * (canvas.height - style.radius * 2) + style.radius;
+                const x = Math.random() * (canvas.width - 100) + 50;
+                const y = Math.random() * (canvas.height - 100) + 50;
                 
-                const newPotato = new Potato(x, y, style.radius, style.color, style.pattern, style.accessories);
-                potatoes.push(newPotato);
+                const potato = new Potato(x, y);
+                potato.deformLevel = style.deform;
+                potato.hasSpots = Math.random() < style.spotChance;
+                potato.greenChance = style.greenChance;
+                potato.hasHat = Math.random() < style.hatChance;
+                potato.hasGlasses = Math.random() < style.glassesChance;
+                
+                // 根据颜色概率调整
+                const baseHue = 30 + Math.random() * 20;
+                potato.color = Math.random() < potato.greenChance ? 
+                    `hsl(${70 + Math.random() * 20}, 40%, 50%)` : 
+                    `hsl(${baseHue}, ${40 + Math.random() * 20}%, ${50 + Math.random() * 10}%)`;
+                
+                potatoes.push(potato);
                 potatoCount++;
                 counter.textContent = `土豆数量: ${potatoCount}`;
             }
@@ -380,36 +302,24 @@
             // 按钮点击事件
             generateBtn.addEventListener('click', function() {
                 const description = input.value.trim();
+                container.classList.add('hidden');
                 
-                if (description) {
-                    // 显示加载动画
-                    loading.style.display = 'block';
-                    generateBtn.disabled = true;
-                    
-                    // 模拟AI处理延迟
-                    setTimeout(() => {
-                        const style = createPotatoStyle(description);
-                        
-                        // 隐藏输入界面
-                        container.classList.add('hidden');
-                        loading.style.display = 'none';
-                        
-                        // 开始生成土豆
-                        generatePotato(style);
-                        
-                        // 设置定时器不断生成新土豆
-                        generationInterval = setInterval(() => {
-                            generatePotato(style);
-                            
-                            // 达到最大数量后停止生成
-                            if (potatoCount >= maxPotatoes) {
-                                clearInterval(generationInterval);
-                            }
-                        }, 1000);
-                    }, 2000);
-                } else {
-                    alert('请输入土豆的描述！');
-                }
+                const style = description ? createPotatoStyle(description) : {
+                    deform: 0.4, 
+                    greenChance: 0.3,
+                    spotChance: 0.8,
+                    hatChance: 0.4,
+                    glassesChance: 0.3
+                };
+                
+                // 首先生成一个土豆
+                generatePotato(style);
+                
+                // 设置定时器不断生成新土豆
+                generationInterval = setInterval(() => {
+                    generatePotato(style);
+                    if (potatoCount >= maxPotatoes) clearInterval(generationInterval);
+                }, 800);
             });
             
             // 启动动画循环

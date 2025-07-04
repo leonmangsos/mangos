@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西兰卡普图案RPG生成器</title>
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --secondary: #f1c40f;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #27ae60;
+            --danger: #e74c3c;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f5f5f5;
+            background-image: url('https://example.com/ethnic-pattern.png');
+            background-blend-mode: overlay;
+            line-height: 1.6;
+            color: #333;
+        }
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px 0;
+            border: 3px solid var(--dark);
+        }
+        .game-header {
+            background: linear-gradient(135deg, var(--primary), #6c3483);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--secondary);
+            position: relative;
+        }
+        .game-header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+        .game-header p {
+            margin: 5px 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .game-header::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--secondary),
+                var(--secondary) 10px,
+                var(--primary) 10px,
+                var(--primary) 20px
+            );
+        }
+        .game-card {
+            padding: 25px;
+            background-color: white;
+            margin: 15px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #ddd;
+            font-size: 1.5rem;
+            position: relative;
+        }
+        h2::after {
+            content: "✧";
+            position: absolute;
+            right: 0;
+            color: var(--secondary);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: all 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 5px rgba(142, 68, 173, 0.5);
+            outline: none;
+            background-color: white;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .fixed-value {
+            background-color: #f0f0f0;
+            color: #555;
+            cursor: not-allowed;
+        }
+        .game-button {
+            background: linear-gradient(to right, var(--primary), #9b59b6);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .game-button:hover {
+            background: linear-gradient(to right, #7d3c98, #8e44ad);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .game-button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(30deg);
+            transition: all 0.3s;
+        }
+        .game-button:hover::after {
+            left: 100%;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            border: 2px solid #ddd;
+        }
+        .image-container {
+            margin-top: 20px;
+            text-align: center;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            padding: 20px;
+            min-height: 200px;
+            border: 2px dashed #ddd;
+            position: relative;
+        }
+        .image-container::before {
+            content: "图案展示区";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: white;
+            padding: 0 10px;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        #generatedImage {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: none;
+            border: 2px solid white;
+        }
+        #status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .info { background-color: #e7f5ff; color: #1864ab; border: 2px solid #a5d8ff; }
+        .success { background-color: #ebfbee; color: #2b8a3e; border: 2px solid #b2f2bb; }
+        .warning { background-color: #fff9db; color: #e67700; border: 2px solid #ffec99; }
+        .error { background-color: #fff5f5; color: #c92a2a; border: 2px solid #ffc9c9; }
+        .game-footer {
+            text-align: center;
+            padding: 15px;
+            background-color: var(--dark);
+            color: white;
+            font-size: 0.9rem;
+        }
+        .rpg-icon {
+            color: var(--secondary);
+            margin: 0 5px;
+        }
+        .param-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .param-group > div {
+            flex: 1;
+        }
+        .floating-pattern {
+            position: absolute;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        .pattern-1 {
+            top: 50px;
+            right: 20px;
+            font-size: 80px;
+        }
+        .pattern-2 {
+            bottom: 30px;
+            left: 20px;
+            font-size: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>西兰卡普图案RPG生成器</h1>
+            <p>收集传统土家族图案，完成你的民族文化图鉴！</p>
+        </div>
+
+        <div class="game-card">
+            <h2>✧ 法师的配方 ✧</h2>
+            <div>
+                <label for="apiKey">魔法卷轴 (API Key):</label>
+                <input type="text" id="apiKey" value="sk-zjhtgrikvnvvzdpjilddpgpwnfgxvnbmcifrvjitadhcjuiz" placeholder="输入你的魔法卷轴密钥">
+            </div>
+            <div>
+                <label for="apiEndpoint">魔法阵位置 (API Endpoint):</label>
+                <input type="text" id="apiEndpoint" value="https://api.siliconflow.cn/v1/images/generations" class="fixed-value" readonly>
+            </div>
+            <div>
+                <label for="apiModel">图案秘籍 (模型名称):</label>
+                <input type="text" id="apiModel" value="Kwai-Kolors/Kolors" class="fixed-value" readonly>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <h2>✧ 图案召唤术 ✧</h2>
+            <div>
+                <label for="prompt">咒语 (Prompt):</label>
+                <textarea id="prompt" placeholder="描述你想要召唤的传统西兰卡普图案...">传统西兰卡普图案，具有土家族特色，色彩鲜艳，几何图案对称，包含传统纹样如太阳花、鱼纹、蝴蝶纹等</textarea>
+            </div>
+            <div>
+                <label for="negativePrompt">禁忌 (Negative Prompt):</label>
+                <textarea id="negativePrompt" placeholder="描述你不希望出现在图案中的内容..." class="fixed-value" readonly>模糊, 低质量, 文字, 水印, 变形, 不自然, 现代元素, 非传统图案</textarea>
+            </div>
+            
+            <div class="param-group">
+                <div>
+                    <label for="width">画布宽度:</label>
+                    <input type="number" id="width" value="512" class="fixed-value" readonly>
+                </div>
+                <div>
+                    <label for="height">画布高度:</label>
+                    <input type="number" id="height" value="512" class="fixed-value" readonly>
+                </div>
+            </div>
+            
+            <div class="param-group">
+                <div>
+                    <label for="steps">法术强度 (步数):</label>
+                    <input type="number" id="steps" value="25" class="fixed-value" readonly>
+                </div>
+                <div>
+                    <label for="guidanceScale">专注力 (引导比例):</label>
+                    <input type="number" id="guidanceScale" value="8.0" class="fixed-value" readonly>
+                </div>
+            </div>
+            
+            <div>
+                <label for="seed">随机符文 (可选):</label>
+                <input type="number" id="seed" placeholder="留空使用随机符文">
+            </div>
+        </div>
+
+        <div class="game-card">
+            <button class="game-button" onclick="sendRequest()">召唤图案 ✧ 消耗1点法力</button>
+            <div id="status" class="info">法力充沛，随时可以施法</div>
+        </div>
+
+        <div class="game-card">
+            <h2>✧ 法术效果 ✧</h2>
+            <div id="response">等待施法结果...</div>
+            <div class="image-container">
+                <span class="floating-pattern pattern-1">✧</span>
+                <span class="floating-pattern pattern-2">❀</span>
+                <img id="generatedImage" alt="召唤的西兰卡普图案将显示在这里">
+            </div>
+        </div>
+
+        <div class="game-footer">
+            <span class="rpg-icon">⚔️</span> 土家族文化传承 RPG 系统 <span class="rpg-icon">🛡️</span>
+        </div>
+    </div>
+
+    <script>
+        function sendRequest() {
+            // 获取输入值
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const apiEndpoint = document.getElementById('apiEndpoint').value.trim();
+            const apiModel = document.getElementById('apiModel').value.trim();
+            const prompt = document.getElementById('prompt').value.trim();
+            const negativePrompt = document.getElementById('negativePrompt').value.trim();
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+            const steps = parseInt(document.getElementById('steps').value);
+            const guidanceScale = parseFloat(document.getElementById('guidanceScale').value);
+            const seedInput = document.getElementById('seed').value.trim();
+            const seed = seedInput ? parseInt(seedInput) : null;
+
+            // 验证必填字段
+            if (!apiKey) {
+                updateStatus('错误: 必须提供魔法卷轴', 'error');
+                return;
+            }
+            if (!prompt) {
+                updateStatus('错误: 必须念出咒语', 'error');
+                return;
+            }
+
+            // 准备请求数据
+            const requestData = {
+                model: apiModel,
+                prompt: "传统西兰卡普图案，" + prompt,
+                negative_prompt: negativePrompt,
+                width: width,
+                height: height,
+                steps: steps,
+                guidance_scale: guidanceScale,
+                seed: seed || undefined,
+                num_images: 1
+            };
+
+            // 清理undefined字段
+            Object.keys(requestData).forEach(key => {
+                if (requestData[key] === undefined) {
+                    delete requestData[key];
+                }
+            });
+
+            // 更新状态
+            updateStatus('正在施展图案召唤术...', 'info');
+            document.getElementById('response').textContent = '法术吟唱中...';
+            document.getElementById('generatedImage').style.display = 'none';
+
+            // 发送请求
+            fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(async response => {
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    const errorMsg = data.error?.message || data.message || '未知错误';
+                    throw new Error(`法术失败 (${response.status}): ${errorMsg}`);
+                }
+                return data;
+            })
+            .then(data => {
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+                
+                if (data.data && data.data.length > 0 && data.data[0].url) {
+                    const imgElement = document.getElementById('generatedImage');
+                    imgElement.src = data.data[0].url;
+                    imgElement.style.display = 'block';
+                    imgElement.alt = '召唤的西兰卡普图案: ' + prompt.substring(0, 50) + (prompt.length > 50 ? '...' : '');
+                    updateStatus('图案召唤成功! 获得了1点文化积分', 'success');
+                } else if (data.images && data.images.length > 0) {
+                    const imgElement = document.getElementById('generatedImage');
+                    imgElement.src = `data:image/png;base64,${data.images[0]}`;
+                    imgElement.style.display = 'block';
+                    imgElement.alt = '召唤的西兰卡普图案: ' + prompt.substring(0, 50) + (prompt.length > 50 ? '...' : '');
+                    updateStatus('图案召唤成功! 获得了1点文化积分', 'success');
+                } else {
+                    updateStatus('法术完成，但未召唤出图案', 'warning');
+                }
+            })
+            .catch(error => {
+                document.getElementById('response').textContent = `法术出错: ${error.message}`;
+                updateStatus(`错误: ${error.message}`, 'error');
+                console.error('法术错误:', error);
+            });
+        }
+
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = type;
+            
+            statusElement.style.opacity = '0';
+            setTimeout(() => {
+                statusElement.style.transition = 'opacity 0.3s';
+                statusElement.style.opacity = '1';
+            }, 10);
+        }
+    </script>
+</body>
+</html>
